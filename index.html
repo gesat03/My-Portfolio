@@ -6,85 +6,10 @@
     <title>Unity WebGL Player | My Portfolio</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
-    
-    <!-- Landscape kilit için yeni meta tag'ler -->
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes, viewport-fit=cover">
-    <meta name="screen-orientation" content="landscape">
-    <meta name="full-screen" content="yes">
-    
-    <!-- Landscape uyarı stili -->
-    <style>
-      #orientation-warning {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.95);
-        color: white;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        z-index: 9999;
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-      
-      #orientation-warning h2 {
-        font-size: 24px;
-        margin-bottom: 10px;
-      }
-      
-      #orientation-warning p {
-        font-size: 16px;
-        margin-bottom: 20px;
-      }
-      
-      .rotate-icon {
-        font-size: 48px;
-        margin: 20px;
-        animation: rotate 2s infinite;
-      }
-      
-      @keyframes rotate {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(90deg); }
-      }
-      
-      /* Landscape mod için ek CSS */
-      body, html {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        width: 100vw;
-        height: 100vh;
-        background: #000;
-      }
-      
-      /* Portrait modda canvas'ı gizle */
-      .portrait-mode #unity-canvas {
-        display: none !important;
-      }
-      
-      .portrait-mode #unity-container {
-        display: none !important;
-      }
-    </style>
   </head>
   <body>
-    <!-- Landscape uyarı mesajı -->
-    <div id="orientation-warning">
-      <h2>Please Rotate Your Device</h2>
-      <p>This application requires landscape mode.</p>
-      <div class="rotate-icon">↻</div>
-      <p>Please rotate your device to landscape orientation</p>
-    </div>
-
     <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
@@ -99,89 +24,6 @@
       </div>
     </div>
     <script>
-      // Landscape kontrol fonksiyonu
-      function initLandscapeLock() {
-        var orientationWarning = document.getElementById('orientation-warning');
-        var body = document.body;
-        
-        function checkOrientation() {
-          var isPortrait = window.innerHeight > window.innerWidth;
-          
-          if (orientationWarning) {
-            if (isPortrait) {
-              // Portrait modda
-              orientationWarning.style.display = 'flex';
-              body.classList.add('portrait-mode');
-            } else {
-              // Landscape modda
-              orientationWarning.style.display = 'none';
-              body.classList.remove('portrait-mode');
-            }
-          }
-          
-          // Ekran boyutlarını güncelle
-          updateCanvasSize(isPortrait);
-        }
-        
-        function updateCanvasSize(isPortrait) {
-          var canvas = document.querySelector("#unity-canvas");
-          var container = document.querySelector("#unity-container");
-          
-          if (!canvas || !container) return;
-          
-          if (isPortrait) {
-            // Portrait modda container'ı gizle
-            container.style.display = 'none';
-          } else {
-            // Landscape modda
-            container.style.display = 'block';
-            
-            // Canvas boyutunu ayarla
-            var width = window.innerWidth;
-            var height = window.innerHeight;
-            
-            canvas.style.width = width + "px";
-            canvas.style.height = height + "px";
-            
-            // Container boyutunu da ayarla
-            container.style.width = width + "px";
-            container.style.height = height + "px";
-          }
-        }
-        
-        // Screen Orientation API ile kilitlemeyi dene
-        function tryLockLandscape() {
-          if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape')
-              .then(() => {
-                console.log('Landscape mode locked');
-              })
-              .catch(error => {
-                console.log('Orientation lock failed or not supported:', error);
-              });
-          }
-        }
-        
-        // Event listeners
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-        
-        // Sayfa yüklendiğinde
-        window.addEventListener('load', function() {
-          // İlk kontroller
-          checkOrientation();
-          
-          // Bir süre sonra kilitlemeyi dene (Unity yüklendikten sonra)
-          setTimeout(tryLockLandscape, 1000);
-        });
-        
-        // DOM yüklendiğinde ilk kontrol
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', checkOrientation);
-        } else {
-          checkOrientation();
-        }
-      }
 
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
@@ -215,11 +57,11 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/v7.loader.js";
+      var loaderUrl = buildUrl + "/v8.loader.js";
       var config = {
-        dataUrl: buildUrl + "/v7.data",
-        frameworkUrl: buildUrl + "/v7.framework.js",
-        codeUrl: buildUrl + "/v7.wasm",
+        dataUrl: buildUrl + "/v8.data",
+        frameworkUrl: buildUrl + "/v8.framework.js",
+        codeUrl: buildUrl + "/v8.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "My Portfolio",
@@ -236,22 +78,25 @@
 
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
+
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
         container.className = "unity-mobile";
         canvas.className = "unity-mobile";
-        
-        // Mobile için canvas çözünürlüğünü ayarla
-        config.devicePixelRatio = 1;
+
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
+
 
       } else {
         // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        container.style.width = "100%";
-        container.style.height = "100%";
-      }
 
-      // Landscape kilidini başlat
-      initLandscapeLock();
+        canvas.style.width = "960px";
+        canvas.style.height = "600px";
+      }
 
       loadingBar.style.display = "block";
 
@@ -260,42 +105,17 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          fullscreenButton.onclick = () => {
-            unityInstance.SetFullscreen(1);
-          };
-          
-          // Unity yüklendikten sonra ekran boyutunu tekrar ayarla
-          setTimeout(function() {
-            checkOrientation();
-            if (screen.orientation && screen.orientation.lock) {
-              screen.orientation.lock('landscape').catch(() => {});
-            }
-          }, 500);
-          
-        }).catch((message) => {
-          alert(message);
-        });
-      };
+              }).then((unityInstance) => {
+                loadingBar.style.display = "none";
+                fullscreenButton.onclick = () => {
+                  unityInstance.SetFullscreen(1);
+                };
+              }).catch((message) => {
+                alert(message);
+              });
+            };
 
       document.body.appendChild(script);
-      
-      // checkOrientation fonksiyonunu global yap
-      window.checkOrientation = function() {
-        var orientationWarning = document.getElementById('orientation-warning');
-        var isPortrait = window.innerHeight > window.innerWidth;
-        
-        if (orientationWarning) {
-          if (isPortrait) {
-            orientationWarning.style.display = 'flex';
-            document.body.classList.add('portrait-mode');
-          } else {
-            orientationWarning.style.display = 'none';
-            document.body.classList.remove('portrait-mode');
-          }
-        }
-      };
 
     </script>
   </body>
