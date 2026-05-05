@@ -8,44 +8,69 @@
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        /* Black background */
-        body, html {
+        /* Reset - full black background */
+        * {
             margin: 0;
             padding: 0;
-            background-color: #000000 !important;
+            box-sizing: border-box;
+        }
+
+        body, html {
             width: 100%;
             height: 100%;
+            background-color: #000000;
             overflow: hidden;
             position: fixed;
         }
 
-        /* Unity container */
-        #unity-container {
-            background-color: #000000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
+        /* Safe container that never overflows */
+        .safe-container {
             position: fixed;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Unity wrapper */
-        .unity-wrapper {
+        /* Fixed aspect ratio container (1920x1080 = 16:9) */
+        .aspect-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000000;
+        }
+
+        /* Inner content wrapper */
+        .content-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-        /* Fixed 1920x1080 canvas - NO STRETCH */
+        /* Unity canvas - FIXED 1920x1080 but scaled */
         #unity-canvas {
-            background-color: #000000;
-            width: 1920px !important;
-            height: 1080px !important;
             display: block;
+            background-color: #000000;
+            /* Will be sized by JS for perfect fit */
+        }
+
+        /* Unity container */
+        #unity-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
         /* Footer */
@@ -53,13 +78,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 1920px;
-            margin-top: 10px;
             padding: 8px 12px;
             background: rgba(0,0,0,0.7);
             border-radius: 8px;
-            box-sizing: border-box;
             backdrop-filter: blur(8px);
+            margin-top: 10px;
         }
 
         #unity-webgl-logo {
@@ -74,9 +97,11 @@
 
         #unity-build-title {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
             color: #fff;
+            margin-left: 10px;
+            margin-right: 10px;
         }
 
         #unity-fullscreen-button {
@@ -89,10 +114,8 @@
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            font-weight: bold;
             transition: all 0.2s ease;
             color: white;
-            margin-left: auto;
             border: 1px solid rgba(255,255,255,0.3);
         }
 
@@ -101,7 +124,6 @@
                 transform: scale(1.05);
             }
 
-        /* Loading bar */
         #unity-loading-bar {
             position: absolute;
             top: 50%;
@@ -110,8 +132,10 @@
             text-align: center;
         }
 
-        /* Fullscreen prompt - shown on mobile only */
-        .mobile-fullscreen-prompt {
+        /* ========== MOBILE OVERLAYS ========== */
+
+        /* Rotate warning (Portrait mode only) */
+        .rotate-warning {
             display: none;
             position: fixed;
             top: 0;
@@ -124,12 +148,74 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            z-index: 10000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        .rotate-icon {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            animation: rotatePhone 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rotatePhone {
+            0% {
+                transform: rotate(0deg);
+                opacity: 1;
+            }
+
+            50% {
+                transform: rotate(90deg);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: rotate(90deg);
+                opacity: 1;
+            }
+        }
+
+        .rotate-warning h2 {
+            font-size: 1.8rem;
+            margin: 0.5rem 0;
+            font-weight: 600;
+        }
+
+        .rotate-warning p {
+            font-size: 1.1rem;
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+
+        .rotate-warning .small-note {
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+            opacity: 0.8;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+
+        /* Fullscreen prompt (shown when not in fullscreen on mobile) */
+        .fullscreen-prompt {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            color: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
             z-index: 10001;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            backdrop-filter: blur(10px);
             cursor: pointer;
         }
 
-        .fullscreen-prompt-icon {
+        .fullscreen-icon {
             font-size: 5rem;
             margin-bottom: 1rem;
             animation: pulse 1.5s ease-in-out infinite;
@@ -147,22 +233,22 @@
             }
         }
 
-        .mobile-fullscreen-prompt h2 {
+        .fullscreen-prompt h2 {
             font-size: 1.8rem;
             margin: 0.5rem 0;
             font-weight: 600;
         }
 
-        .mobile-fullscreen-prompt p {
-            font-size: 1.1rem;
+        .fullscreen-prompt p {
+            font-size: 1rem;
             margin: 0.5rem 0;
             opacity: 0.9;
         }
 
-        .fullscreen-trigger-btn {
+        .fullscreen-btn {
             margin-top: 2rem;
             padding: 15px 40px;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             background: rgba(255,255,255,0.2);
             border: 2px solid white;
             color: white;
@@ -172,71 +258,135 @@
             font-weight: 600;
         }
 
-            .fullscreen-trigger-btn:hover {
+            .fullscreen-btn:hover {
                 background: rgba(255,255,255,0.3);
                 transform: scale(1.05);
             }
 
-        /* Small screens: scale canvas to fit with scroll (NO STRETCH) */
-        @media (max-width: 1920px) {
-            #unity-canvas {
-                width: 100% !important;
-                height: auto !important;
-                max-width: 1920px;
-                max-height: 1080px;
-                object-fit: contain;
+        /* ========== MEDIA QUERIES ========== */
+
+        /* Mobile Portrait: Show rotate warning, hide everything else */
+        @media (orientation: portrait) and (max-width: 1024px) {
+            .safe-container {
+                display: none !important;
             }
 
-            #unity-footer {
-                width: 100%;
-                max-width: 1920px;
+            .rotate-warning {
+                display: flex !important;
+            }
+
+            .fullscreen-prompt {
+                display: none !important;
+            }
+        }
+
+        /* Mobile Landscape: Show fullscreen prompt if not in fullscreen */
+        @media (orientation: landscape) and (max-width: 1024px) {
+            .rotate-warning {
+                display: none !important;
+            }
+            /* fullscreen-prompt visibility controlled by JS */
+        }
+
+        /* Desktop: no overlays */
+        @media (min-width: 1025px) {
+            .rotate-warning, .fullscreen-prompt {
+                display: none !important;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Mobile Fullscreen Prompt (only on mobile devices) -->
-    <div class="mobile-fullscreen-prompt" id="fullscreenPrompt">
-        <div class="fullscreen-prompt-icon">⛶</div>
-        <h2>Tap for Fullscreen Experience</h2>
-        <p>For the best viewing experience, please enter fullscreen mode</p>
-        <button class="fullscreen-trigger-btn" id="fullscreenTriggerBtn">Enter Fullscreen ⛶</button>
-        <p style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
-            Tap anywhere on the screen
+    <!-- Rotate Warning (Portrait only) -->
+    <div class="rotate-warning" id="rotateWarning">
+        <div class="rotate-icon">📱 ↔️</div>
+        <h2>Please Rotate Your Phone to Landscape</h2>
+        <p>This portfolio is best viewed in landscape mode</p>
+        <p class="small-note">
+            💡 If your screen rotation is locked, swipe down from the top of your screen<br>
+            and enable "Auto-rotate" or "Rotation Unlock"
+        </p>
+    </div>
+
+    <!-- Fullscreen Prompt (Mobile Landscape, not fullscreen) -->
+    <div class="fullscreen-prompt" id="fullscreenPrompt">
+        <div class="fullscreen-icon">⛶</div>
+        <h2>Tap for Fullscreen</h2>
+        <p>For the best experience, go fullscreen</p>
+        <button class="fullscreen-btn" id="fullscreenTriggerBtn">Enter Fullscreen ⛶</button>
+        <p style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.6;">
+            Tap anywhere to continue
         </p>
     </div>
 
     <!-- Unity Container -->
-    <div id="unity-container">
-        <div class="unity-wrapper">
-            <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
-            <div id="unity-loading-bar">
-                <div id="unity-logo"></div>
-                <div id="unity-progress-bar-empty">
-                    <div id="unity-progress-bar-full"></div>
+    <div class="safe-container" id="safeContainer">
+        <div class="aspect-container" id="aspectContainer">
+            <div class="content-wrapper">
+                <div id="unity-container">
+                    <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
+                    <div id="unity-loading-bar">
+                        <div id="unity-logo"></div>
+                        <div id="unity-progress-bar-empty">
+                            <div id="unity-progress-bar-full"></div>
+                        </div>
+                    </div>
+                    <div id="unity-warning"></div>
+                    <div id="unity-footer">
+                        <div id="unity-webgl-logo"></div>
+                        <div id="unity-build-title">Gürkan Esat Portfolio</div>
+                        <div id="unity-fullscreen-button">⛶</div>
+                    </div>
                 </div>
-            </div>
-            <div id="unity-warning"></div>
-            <div id="unity-footer">
-                <div id="unity-webgl-logo"></div>
-                <div id="unity-build-title">Gürkan Esat Portfolio</div>
-                <div id="unity-fullscreen-button">⛶</div>
             </div>
         </div>
     </div>
 
     <script>
-        var container = document.querySelector("#unity-container");
         var canvas = document.querySelector("#unity-canvas");
         var loadingBar = document.querySelector("#unity-loading-bar");
         var progressBarFull = document.querySelector("#unity-progress-bar-full");
         var fullscreenButton = document.querySelector("#unity-fullscreen-button");
         var warningBanner = document.querySelector("#unity-warning");
+        var rotateWarning = document.getElementById("rotateWarning");
         var fullscreenPrompt = document.getElementById("fullscreenPrompt");
         var fullscreenTriggerBtn = document.getElementById("fullscreenTriggerBtn");
+        var safeContainer = document.getElementById("safeContainer");
 
         var unityInstance = null;
         var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var isFullscreenActive = false;
+
+        // Function to resize canvas for perfect fit (NO STRETCH)
+        function resizeCanvas() {
+            if (!canvas) return;
+
+            var container = document.querySelector(".content-wrapper");
+            if (!container) return;
+
+            var containerWidth = container.clientWidth;
+            var containerHeight = container.clientHeight;
+            var canvasWidth = 1920;
+            var canvasHeight = 1080;
+
+            // Calculate scale to fit
+            var scaleX = containerWidth / canvasWidth;
+            var scaleY = containerHeight / canvasHeight;
+            var scale = Math.min(scaleX, scaleY);
+
+            var scaledWidth = canvasWidth * scale;
+            var scaledHeight = canvasHeight * scale;
+
+            canvas.style.width = scaledWidth + "px";
+            canvas.style.height = scaledHeight + "px";
+            canvas.style.position = "relative";
+
+            // Adjust footer width
+            var footer = document.querySelector("#unity-footer");
+            if (footer) {
+                footer.style.width = scaledWidth + "px";
+            }
+        }
 
         function unityShowBanner(msg, type) {
             function updateBannerVisibility() {
@@ -256,7 +406,6 @@
             updateBannerVisibility();
         }
 
-        // Function to enter fullscreen
         function enterFullscreen() {
             var elem = canvas;
             if (elem.requestFullscreen) {
@@ -268,7 +417,6 @@
             }
         }
 
-        // Function to exit fullscreen
         function exitFullscreen() {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -277,33 +425,50 @@
             }
         }
 
-        // Check and update prompt visibility (mobile only)
-        function updatePromptVisibility() {
-            if (!isMobile) {
-                fullscreenPrompt.style.display = "none";
-                return;
-            }
+        function updateFullscreenPrompt() {
+            if (!isMobile) return;
 
+            var isLandscape = window.matchMedia("(orientation: landscape)").matches;
             var isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
 
-            if (!isCurrentlyFullscreen) {
-                // Show prompt on mobile when not in fullscreen
+            if (isLandscape && !isCurrentlyFullscreen) {
                 fullscreenPrompt.style.display = "flex";
-            } else {
-                // Hide prompt when in fullscreen
+                safeContainer.style.display = "flex";
+            } else if (isLandscape && isCurrentlyFullscreen) {
+                fullscreenPrompt.style.display = "none";
+                safeContainer.style.display = "flex";
+            } else if (!isLandscape) {
                 fullscreenPrompt.style.display = "none";
             }
         }
 
-        // Listen to fullscreen change
+        // Listen to events
         document.addEventListener('fullscreenchange', function () {
-            updatePromptVisibility();
+            isFullscreenActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            updateFullscreenPrompt();
+            setTimeout(resizeCanvas, 100);
         });
         document.addEventListener('webkitfullscreenchange', function () {
-            updatePromptVisibility();
+            isFullscreenActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            updateFullscreenPrompt();
+            setTimeout(resizeCanvas, 100);
         });
 
-        // Fullscreen button on prompt
+        window.addEventListener('resize', function () {
+            setTimeout(function () {
+                resizeCanvas();
+                updateFullscreenPrompt();
+            }, 50);
+        });
+
+        window.addEventListener('orientationchange', function () {
+            setTimeout(function () {
+                resizeCanvas();
+                updateFullscreenPrompt();
+            }, 100);
+        });
+
+        // Fullscreen prompt handlers
         if (fullscreenTriggerBtn) {
             fullscreenTriggerBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -311,19 +476,14 @@
             });
         }
 
-        // Tap anywhere on prompt to enter fullscreen
         if (fullscreenPrompt) {
             fullscreenPrompt.addEventListener('click', function (e) {
-                if (e.target === fullscreenPrompt ||
-                    e.target.classList.contains('fullscreen-prompt-icon') ||
-                    e.target.tagName === 'P' ||
-                    e.target.tagName === 'H2') {
+                if (e.target === fullscreenPrompt || e.target.classList.contains('fullscreen-icon') || e.target.tagName === 'P' || e.target.tagName === 'H2') {
                     enterFullscreen();
                 }
             });
         }
 
-        // Regular fullscreen button
         if (fullscreenButton) {
             fullscreenButton.onclick = function () {
                 if (unityInstance) {
@@ -348,29 +508,16 @@
         };
 
         if (isMobile) {
-            // Mobile device
             var meta = document.createElement('meta');
             meta.name = 'viewport';
             meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes, shrink-to-fit=yes';
             document.getElementsByTagName('head')[0].appendChild(meta);
-            container.className = "unity-mobile";
-            canvas.className = "unity-mobile";
-
-            // Prevent body scroll on mobile
-            document.body.style.overflow = "hidden";
-
-            // Show prompt after load
-            setTimeout(updatePromptVisibility, 500);
-
         } else {
-            // Desktop style - no auto fullscreen
+            // Desktop: fixed size
             canvas.style.width = "1920px";
             canvas.style.height = "1080px";
-
-            // Hide prompt on desktop
-            if (fullscreenPrompt) {
-                fullscreenPrompt.style.display = "none";
-            }
+            var footer = document.querySelector("#unity-footer");
+            if (footer) footer.style.width = "1920px";
         }
 
         loadingBar.style.display = "block";
@@ -383,9 +530,8 @@
             }).then((instance) => {
                 unityInstance = instance;
                 loadingBar.style.display = "none";
-
-                // Update prompt after load
-                setTimeout(updatePromptVisibility, 500);
+                resizeCanvas();
+                setTimeout(updateFullscreenPrompt, 500);
             }).catch((message) => {
                 alert(message);
             });
@@ -393,8 +539,9 @@
 
         document.body.appendChild(script);
 
-        // Initial check
-        setTimeout(updatePromptVisibility, 100);
+        // Initial resize
+        setTimeout(resizeCanvas, 100);
+        setTimeout(updateFullscreenPrompt, 100);
     </script>
 </body>
 </html>
