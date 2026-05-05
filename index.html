@@ -7,6 +7,9 @@
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
 
+    <!-- FIXED: Clean viewport without shrink-to-fit issues -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
     <style>
         /* Reset */
         * {
@@ -20,6 +23,7 @@
             height: 100%;
             background-color: #000000;
             overflow: hidden;
+            position: fixed;
         }
 
         /* Main container */
@@ -44,7 +48,7 @@
             background-color: #000000;
         }
 
-        /* Canvas container - critical for fullscreen */
+        /* Canvas container */
         .canvas-container {
             display: flex;
             align-items: center;
@@ -119,7 +123,6 @@
 
         /* ========== MOBILE OVERLAYS ========== */
 
-        /* Rotate warning */
         .rotate-warning {
             display: none;
             position: fixed;
@@ -180,7 +183,6 @@
             line-height: 1.4;
         }
 
-        /* Fullscreen prompt */
         .fullscreen-prompt {
             display: none;
             position: fixed;
@@ -331,55 +333,40 @@
         var fullscreenPrompt = document.getElementById("fullscreenPrompt");
         var fullscreenTriggerBtn = document.getElementById("fullscreenTriggerBtn");
         var mainContainer = document.getElementById("mainContainer");
-        var unityWrapper = document.getElementById("unityWrapper");
-        var canvasContainer = document.getElementById("canvasContainer");
 
         var unityInstance = null;
         var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         var isFullscreenActive = false;
 
-        // Critical: Resize function for perfect fit
         function resizeCanvas() {
             if (!canvas) return;
 
-            // Get available space
             var maxWidth, maxHeight;
 
             if (isFullscreenActive || (document.fullscreenElement || document.webkitFullscreenElement)) {
-                // In fullscreen - use window dimensions
                 maxWidth = window.innerWidth;
                 maxHeight = window.innerHeight;
             } else {
-                // Not in fullscreen - use container dimensions
                 maxWidth = mainContainer.clientWidth;
                 maxHeight = mainContainer.clientHeight;
             }
 
-            // Target aspect ratio 1920:1080 = 16:9
-            var targetWidth = 1920;
-            var targetHeight = 1080;
-            var targetRatio = targetWidth / targetHeight; // 1.777...
-
+            var targetRatio = 1920 / 1080; // 16:9
             var currentRatio = maxWidth / maxHeight;
 
             var finalWidth, finalHeight;
 
             if (currentRatio > targetRatio) {
-                // Screen is wider - fit to height
                 finalHeight = maxHeight;
                 finalWidth = finalHeight * targetRatio;
             } else {
-                // Screen is taller - fit to width
                 finalWidth = maxWidth;
                 finalHeight = finalWidth / targetRatio;
             }
 
-            // Apply sizes
             canvas.style.width = finalWidth + "px";
             canvas.style.height = finalHeight + "px";
-            canvas.style.position = "relative";
 
-            // Adjust footer width
             var footer = document.querySelector("#unity-footer");
             if (footer) {
                 footer.style.width = Math.min(finalWidth, maxWidth) + "px";
@@ -410,16 +397,6 @@
                 elem.requestFullscreen();
             } else if (elem.webkitRequestFullscreen) {
                 elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
-        }
-
-        function exitFullscreen() {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
             }
         }
 
@@ -436,7 +413,6 @@
                 fullscreenPrompt.style.display = "none";
             }
 
-            // Resize after fullscreen change
             setTimeout(resizeCanvas, 50);
         }
 
@@ -461,7 +437,6 @@
             }, 100);
         });
 
-        // Fullscreen prompt handlers
         if (fullscreenTriggerBtn) {
             fullscreenTriggerBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -503,13 +478,7 @@
             showBanner: unityShowBanner,
         };
 
-        if (isMobile) {
-            var meta = document.createElement('meta');
-            meta.name = 'viewport';
-            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes, shrink-to-fit=yes';
-            document.getElementsByTagName('head')[0].appendChild(meta);
-        } else {
-            // Desktop: fixed size
+        if (!isMobile) {
             canvas.style.width = "1920px";
             canvas.style.height = "1080px";
             var footer = document.querySelector("#unity-footer");
@@ -535,11 +504,8 @@
 
         document.body.appendChild(script);
 
-        // Initial resize
         setTimeout(resizeCanvas, 100);
         setTimeout(updateFullscreenPrompt, 100);
-
-        // Force resize on load
         window.addEventListener('load', function () {
             setTimeout(resizeCanvas, 200);
         });
