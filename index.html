@@ -3,31 +3,38 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | My Portfolio</title>
+    <title>Gürkan Esat Portfolio</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        /* White background */
+        /* White background - allow scrolling */
         body, html {
             margin: 0;
             padding: 0;
             background-color: #ffffff !important;
             width: 100%;
-            height: 100%;
+            min-height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto; /* Allow scrolling */
         }
 
-        /* Unity container - centered */
+        /* Unity container - centered on desktop, relative for mobile */
         #unity-container {
             background-color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
+            min-height: 100vh;
+        }
+
+        /* Unity container wrapper for proper centering */
+        .unity-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Fixed 800x600 canvas */
@@ -39,48 +46,55 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
-        /* Footer (fullscreen button) - always visible */
+        /* Footer with logo and title - visible on all devices */
         #unity-footer {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: rgba(0,0,0,0.7);
-            border-radius: 8px;
-            padding: 8px 12px;
             display: flex;
-            gap: 10px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            align-items: center;
+            justify-content: space-between;
+            width: 800px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        #unity-webgl-logo {
+            display: inline-block;
+            width: 48px;
+            height: 48px;
+            background-image: url('TemplateData/webgl-logo.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        #unity-build-title {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
         }
 
         #unity-fullscreen-button {
             cursor: pointer;
             width: 36px;
             height: 36px;
-            background: white;
+            background: #e0e0e0;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             transition: all 0.2s ease;
             color: #333;
+            margin-left: auto;
         }
 
             #unity-fullscreen-button:hover {
-                background: #f0f0f0;
+                background: #d0d0d0;
                 transform: scale(1.05);
             }
-
-        #unity-webgl-logo {
-            display: none;
-        }
-
-        #unity-build-title {
-            display: none;
-        }
 
         /* Loading bar styles */
         #unity-loading-bar {
@@ -158,10 +172,6 @@
                 display: none !important;
             }
 
-            #unity-footer {
-                display: none !important;
-            }
-
             .rotate-warning {
                 display: flex !important;
             }
@@ -173,17 +183,13 @@
                 display: flex !important;
             }
 
-            #unity-footer {
-                display: flex !important;
-            }
-
             .rotate-warning {
                 display: none !important;
             }
         }
 
-        /* Mobile landscape: adjust canvas size to fit smaller screens */
-        @media (orientation: landscape) and (max-width: 900px) {
+        /* Mobile landscape: keep 800x600 but scale if screen is too small */
+        @media (orientation: landscape) and (max-width: 850px) {
             #unity-canvas {
                 width: 100% !important;
                 height: auto !important;
@@ -191,19 +197,26 @@
                 max-height: 600px;
                 object-fit: contain;
             }
+
+            #unity-footer {
+                width: 100%;
+                max-width: 800px;
+            }
         }
 
-        /* Desktop styles */
+        /* Desktop: normal centering */
         @media (min-width: 1024px) {
-            body, html {
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            #unity-container {
+                min-height: 100vh;
             }
 
             #unity-canvas {
                 width: 800px !important;
                 height: 600px !important;
+            }
+
+            #unity-footer {
+                width: 800px;
             }
         }
     </style>
@@ -221,19 +234,21 @@
     </div>
 
     <!-- Unity Container -->
-    <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas" width="800" height="600" tabindex="-1"></canvas>
-        <div id="unity-loading-bar">
-            <div id="unity-logo"></div>
-            <div id="unity-progress-bar-empty">
-                <div id="unity-progress-bar-full"></div>
+    <div id="unity-container">
+        <div class="unity-wrapper">
+            <canvas id="unity-canvas" width="800" height="600" tabindex="-1"></canvas>
+            <div id="unity-loading-bar">
+                <div id="unity-logo"></div>
+                <div id="unity-progress-bar-empty">
+                    <div id="unity-progress-bar-full"></div>
+                </div>
             </div>
-        </div>
-        <div id="unity-warning"></div>
-        <div id="unity-footer">
-            <div id="unity-webgl-logo"></div>
-            <div id="unity-fullscreen-button">⛶</div>
-            <div id="unity-build-title">My Portfolio</div>
+            <div id="unity-warning"></div>
+            <div id="unity-footer">
+                <div id="unity-webgl-logo"></div>
+                <div id="unity-build-title">Gürkan Esat Portfolio</div>
+                <div id="unity-fullscreen-button">⛶</div>
+            </div>
         </div>
     </div>
 
@@ -271,25 +286,24 @@
             codeUrl: buildUrl + "/v9.1.wasm",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
-            productName: "My Portfolio",
+            productName: "Gürkan Esat Portfolio",
             productVersion: "0.1",
             showBanner: unityShowBanner,
         };
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // Mobile device
+            // Mobile device - viewport settings
             var meta = document.createElement('meta');
             meta.name = 'viewport';
-            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+            meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes, shrink-to-fit=yes';
             document.getElementsByTagName('head')[0].appendChild(meta);
             container.className = "unity-mobile";
             canvas.className = "unity-mobile";
 
-            // Force canvas to be centered on mobile
-            canvas.style.position = "relative";
-            canvas.style.margin = "0 auto";
+            // Don't lock scrolling on mobile
+            document.body.style.overflow = "auto";
 
-            // Handle fullscreen button for mobile
+            // Fullscreen button handler
             if (fullscreenButton) {
                 fullscreenButton.onclick = function () {
                     if (canvas.requestFullscreen) {
@@ -304,8 +318,6 @@
             // Desktop style
             canvas.style.width = "800px";
             canvas.style.height = "600px";
-            container.style.position = "relative";
-            container.style.margin = "0 auto";
 
             if (fullscreenButton) {
                 fullscreenButton.onclick = function () {
