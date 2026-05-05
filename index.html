@@ -8,6 +8,19 @@
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
+        /* Set body background to black */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000 !important;
+            overflow-x: hidden;
+        }
+
+        /* Ensure html also has black background */
+        html {
+            background-color: #000000;
+        }
+
         /* Landscape warning styles */
         .rotate-warning {
             display: none;
@@ -69,6 +82,16 @@
             line-height: 1.4;
         }
 
+        /* Make unity container background black */
+        #unity-container {
+            background-color: #000000;
+        }
+
+        /* Ensure canvas has black background too */
+        #unity-canvas {
+            background-color: #000000;
+        }
+
         /* Portrait mode: hide Unity content, show warning */
         @media (orientation: portrait) {
             #unity-container {
@@ -113,7 +136,7 @@
 
     <!-- Unity Container -->
     <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+        <canvas id="unity-canvas" width=800 height=600 tabindex="-1"></canvas>
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
             <div id="unity-progress-bar-empty">
@@ -206,7 +229,7 @@
 
         } else {
             // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-            canvas.style.width = "960px";
+            canvas.style.width = "800px";
             canvas.style.height = "600px";
         }
 
