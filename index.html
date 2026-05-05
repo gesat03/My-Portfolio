@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        /* Reset - full black background */
+        /* Reset */
         * {
             margin: 0;
             padding: 0;
@@ -20,11 +20,10 @@
             height: 100%;
             background-color: #000000;
             overflow: hidden;
-            position: fixed;
         }
 
-        /* Safe container that never overflows */
-        .safe-container {
+        /* Main container */
+        .main-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -36,41 +35,27 @@
             justify-content: center;
         }
 
-        /* Fixed aspect ratio container (1920x1080 = 16:9) */
-        .aspect-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
+        /* Unity wrapper */
+        .unity-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #000000;
+        }
+
+        /* Canvas container - critical for fullscreen */
+        .canvas-container {
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #000000;
         }
 
-        /* Inner content wrapper */
-        .content-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Unity canvas - FIXED 1920x1080 but scaled */
+        /* Unity canvas */
         #unity-canvas {
             display: block;
             background-color: #000000;
-            /* Will be sized by JS for perfect fit */
-        }
-
-        /* Unity container */
-        #unity-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
         }
 
         /* Footer */
@@ -134,7 +119,7 @@
 
         /* ========== MOBILE OVERLAYS ========== */
 
-        /* Rotate warning (Portrait mode only) */
+        /* Rotate warning */
         .rotate-warning {
             display: none;
             position: fixed;
@@ -195,7 +180,7 @@
             line-height: 1.4;
         }
 
-        /* Fullscreen prompt (shown when not in fullscreen on mobile) */
+        /* Fullscreen prompt */
         .fullscreen-prompt {
             display: none;
             position: fixed;
@@ -265,9 +250,8 @@
 
         /* ========== MEDIA QUERIES ========== */
 
-        /* Mobile Portrait: Show rotate warning, hide everything else */
         @media (orientation: portrait) and (max-width: 1024px) {
-            .safe-container {
+            .main-container {
                 display: none !important;
             }
 
@@ -280,15 +264,12 @@
             }
         }
 
-        /* Mobile Landscape: Show fullscreen prompt if not in fullscreen */
         @media (orientation: landscape) and (max-width: 1024px) {
             .rotate-warning {
                 display: none !important;
             }
-            /* fullscreen-prompt visibility controlled by JS */
         }
 
-        /* Desktop: no overlays */
         @media (min-width: 1025px) {
             .rotate-warning, .fullscreen-prompt {
                 display: none !important;
@@ -297,7 +278,7 @@
     </style>
 </head>
 <body>
-    <!-- Rotate Warning (Portrait only) -->
+    <!-- Rotate Warning -->
     <div class="rotate-warning" id="rotateWarning">
         <div class="rotate-icon">📱 ↔️</div>
         <h2>Please Rotate Your Phone to Landscape</h2>
@@ -308,7 +289,7 @@
         </p>
     </div>
 
-    <!-- Fullscreen Prompt (Mobile Landscape, not fullscreen) -->
+    <!-- Fullscreen Prompt -->
     <div class="fullscreen-prompt" id="fullscreenPrompt">
         <div class="fullscreen-icon">⛶</div>
         <h2>Tap for Fullscreen</h2>
@@ -319,25 +300,23 @@
         </p>
     </div>
 
-    <!-- Unity Container -->
-    <div class="safe-container" id="safeContainer">
-        <div class="aspect-container" id="aspectContainer">
-            <div class="content-wrapper">
-                <div id="unity-container">
-                    <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
-                    <div id="unity-loading-bar">
-                        <div id="unity-logo"></div>
-                        <div id="unity-progress-bar-empty">
-                            <div id="unity-progress-bar-full"></div>
-                        </div>
-                    </div>
-                    <div id="unity-warning"></div>
-                    <div id="unity-footer">
-                        <div id="unity-webgl-logo"></div>
-                        <div id="unity-build-title">Gürkan Esat Portfolio</div>
-                        <div id="unity-fullscreen-button">⛶</div>
-                    </div>
+    <!-- Main Container -->
+    <div class="main-container" id="mainContainer">
+        <div class="unity-wrapper" id="unityWrapper">
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
+            </div>
+            <div id="unity-loading-bar">
+                <div id="unity-logo"></div>
+                <div id="unity-progress-bar-empty">
+                    <div id="unity-progress-bar-full"></div>
                 </div>
+            </div>
+            <div id="unity-warning"></div>
+            <div id="unity-footer">
+                <div id="unity-webgl-logo"></div>
+                <div id="unity-build-title">Gürkan Esat Portfolio</div>
+                <div id="unity-fullscreen-button">⛶</div>
             </div>
         </div>
     </div>
@@ -351,40 +330,59 @@
         var rotateWarning = document.getElementById("rotateWarning");
         var fullscreenPrompt = document.getElementById("fullscreenPrompt");
         var fullscreenTriggerBtn = document.getElementById("fullscreenTriggerBtn");
-        var safeContainer = document.getElementById("safeContainer");
+        var mainContainer = document.getElementById("mainContainer");
+        var unityWrapper = document.getElementById("unityWrapper");
+        var canvasContainer = document.getElementById("canvasContainer");
 
         var unityInstance = null;
         var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         var isFullscreenActive = false;
 
-        // Function to resize canvas for perfect fit (NO STRETCH)
+        // Critical: Resize function for perfect fit
         function resizeCanvas() {
             if (!canvas) return;
 
-            var container = document.querySelector(".content-wrapper");
-            if (!container) return;
+            // Get available space
+            var maxWidth, maxHeight;
 
-            var containerWidth = container.clientWidth;
-            var containerHeight = container.clientHeight;
-            var canvasWidth = 1920;
-            var canvasHeight = 1080;
+            if (isFullscreenActive || (document.fullscreenElement || document.webkitFullscreenElement)) {
+                // In fullscreen - use window dimensions
+                maxWidth = window.innerWidth;
+                maxHeight = window.innerHeight;
+            } else {
+                // Not in fullscreen - use container dimensions
+                maxWidth = mainContainer.clientWidth;
+                maxHeight = mainContainer.clientHeight;
+            }
 
-            // Calculate scale to fit
-            var scaleX = containerWidth / canvasWidth;
-            var scaleY = containerHeight / canvasHeight;
-            var scale = Math.min(scaleX, scaleY);
+            // Target aspect ratio 1920:1080 = 16:9
+            var targetWidth = 1920;
+            var targetHeight = 1080;
+            var targetRatio = targetWidth / targetHeight; // 1.777...
 
-            var scaledWidth = canvasWidth * scale;
-            var scaledHeight = canvasHeight * scale;
+            var currentRatio = maxWidth / maxHeight;
 
-            canvas.style.width = scaledWidth + "px";
-            canvas.style.height = scaledHeight + "px";
+            var finalWidth, finalHeight;
+
+            if (currentRatio > targetRatio) {
+                // Screen is wider - fit to height
+                finalHeight = maxHeight;
+                finalWidth = finalHeight * targetRatio;
+            } else {
+                // Screen is taller - fit to width
+                finalWidth = maxWidth;
+                finalHeight = finalWidth / targetRatio;
+            }
+
+            // Apply sizes
+            canvas.style.width = finalWidth + "px";
+            canvas.style.height = finalHeight + "px";
             canvas.style.position = "relative";
 
             // Adjust footer width
             var footer = document.querySelector("#unity-footer");
             if (footer) {
-                footer.style.width = scaledWidth + "px";
+                footer.style.width = Math.min(finalWidth, maxWidth) + "px";
             }
         }
 
@@ -429,36 +427,31 @@
             if (!isMobile) return;
 
             var isLandscape = window.matchMedia("(orientation: landscape)").matches;
-            var isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            var currentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            isFullscreenActive = currentlyFullscreen;
 
-            if (isLandscape && !isCurrentlyFullscreen) {
+            if (isLandscape && !currentlyFullscreen) {
                 fullscreenPrompt.style.display = "flex";
-                safeContainer.style.display = "flex";
-            } else if (isLandscape && isCurrentlyFullscreen) {
-                fullscreenPrompt.style.display = "none";
-                safeContainer.style.display = "flex";
-            } else if (!isLandscape) {
+            } else {
                 fullscreenPrompt.style.display = "none";
             }
+
+            // Resize after fullscreen change
+            setTimeout(resizeCanvas, 50);
         }
 
-        // Listen to events
+        // Event listeners
         document.addEventListener('fullscreenchange', function () {
-            isFullscreenActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
             updateFullscreenPrompt();
             setTimeout(resizeCanvas, 100);
         });
         document.addEventListener('webkitfullscreenchange', function () {
-            isFullscreenActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
             updateFullscreenPrompt();
             setTimeout(resizeCanvas, 100);
         });
 
         window.addEventListener('resize', function () {
-            setTimeout(function () {
-                resizeCanvas();
-                updateFullscreenPrompt();
-            }, 50);
+            setTimeout(resizeCanvas, 50);
         });
 
         window.addEventListener('orientationchange', function () {
@@ -478,7 +471,10 @@
 
         if (fullscreenPrompt) {
             fullscreenPrompt.addEventListener('click', function (e) {
-                if (e.target === fullscreenPrompt || e.target.classList.contains('fullscreen-icon') || e.target.tagName === 'P' || e.target.tagName === 'H2') {
+                if (e.target === fullscreenPrompt ||
+                    e.target.classList.contains('fullscreen-icon') ||
+                    e.target.tagName === 'P' ||
+                    e.target.tagName === 'H2') {
                     enterFullscreen();
                 }
             });
@@ -542,6 +538,11 @@
         // Initial resize
         setTimeout(resizeCanvas, 100);
         setTimeout(updateFullscreenPrompt, 100);
+
+        // Force resize on load
+        window.addEventListener('load', function () {
+            setTimeout(resizeCanvas, 200);
+        });
     </script>
 </body>
 </html>
