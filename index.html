@@ -8,17 +8,72 @@
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        /* Set body background to black */
-        body {
+        /* White background */
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: #000000 !important;
-            overflow-x: hidden;
+            background-color: #ffffff !important;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
-        /* Ensure html also has black background */
-        html {
-            background-color: #000000;
+        /* Unity container - full screen on mobile landscape */
+        #unity-container {
+            background-color: #ffffff;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Canvas should fill container while maintaining aspect ratio */
+        #unity-canvas {
+            background-color: #ffffff;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain;
+        }
+
+        /* Footer (fullscreen button container) - always visible on mobile landscape */
+        #unity-footer {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 100;
+            background: rgba(0,0,0,0.6);
+            border-radius: 8px;
+            padding: 5px;
+            display: flex;
+            gap: 8px;
+            backdrop-filter: blur(4px);
+        }
+
+        #unity-fullscreen-button {
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+        }
+
+            #unity-fullscreen-button:hover {
+                background: white;
+                transform: scale(1.05);
+            }
+
+        #unity-webgl-logo {
+            display: none; /* Hide WebGL logo for cleaner look */
+        }
+
+        #unity-build-title {
+            display: none; /* Hide build title */
         }
 
         /* Landscape warning styles */
@@ -82,16 +137,6 @@
             line-height: 1.4;
         }
 
-        /* Make unity container background black */
-        #unity-container {
-            background-color: #000000;
-        }
-
-        /* Ensure canvas has black background too */
-        #unity-canvas {
-            background-color: #000000;
-        }
-
         /* Portrait mode: hide Unity content, show warning */
         @media (orientation: portrait) {
             #unity-container {
@@ -114,10 +159,24 @@
             }
         }
 
-        /* Extra small landscape devices */
-        @media (orientation: landscape) and (max-height: 400px) {
-            .unity-mobile {
-                transform: scale(0.9);
+        /* Desktop styles - keeps original 960x600 */
+        @media (min-width: 1024px) and (orientation: landscape) {
+            #unity-container.unity-desktop {
+                width: 960px;
+                height: 600px;
+                position: relative;
+                margin: 0 auto;
+            }
+
+            #unity-canvas {
+                width: 960px !important;
+                height: 600px !important;
+            }
+
+            body, html {
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
         }
     </style>
@@ -136,7 +195,7 @@
 
     <!-- Unity Container -->
     <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas" width=800 height=600 tabindex="-1"></canvas>
+        <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
             <div id="unity-progress-bar-empty">
@@ -146,7 +205,10 @@
         <div id="unity-warning"> </div>
         <div id="unity-footer">
             <div id="unity-webgl-logo"></div>
-            <div id="unity-fullscreen-button"></div>
+            <div id="unity-fullscreen-button">
+                <!-- Fullscreen icon (Unicode) -->
+                ⛶
+            </div>
             <div id="unity-build-title">My Portfolio</div>
         </div>
     </div>
@@ -161,10 +223,6 @@
 
         // Shows a temporary message banner/ribbon for a few seconds, or
         // a permanent error message on top of the canvas if type=='error'.
-        // If type=='warning', a yellow highlight color is used.
-        // Modify or remove this function to customize the visually presented
-        // way that non-critical warnings and error messages are presented to the
-        // user.
         function unityShowBanner(msg, type) {
             function updateBannerVisibility() {
                 warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
@@ -196,16 +254,8 @@
             showBanner: unityShowBanner,
         };
 
-        // By default, Unity keeps WebGL canvas render target size matched with
-        // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-        // Set this to false if you want to decouple this synchronization from
-        // happening inside the engine, and you would instead like to size up
-        // the canvas DOM size and WebGL render target sizes yourself.
-        // config.matchWebGLToCanvasSize = false;
-
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // Mobile device style: fill the whole browser client area with the game canvas:
-
+            // Mobile device: fill the whole browser client area
             var meta = document.createElement('meta');
             meta.name = 'viewport';
             meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
@@ -213,24 +263,30 @@
             container.className = "unity-mobile";
             canvas.className = "unity-mobile";
 
-            // To lower canvas resolution on mobile devices to gain some
-            // performance, uncomment the following line:
-            // config.devicePixelRatio = 1;
+            // Make canvas fill the screen while maintaining aspect ratio
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
+            canvas.style.objectFit = "contain";
 
-            // Add resize listener to handle orientation changes gracefully
-            window.addEventListener('resize', function () {
-                // This ensures the warning appears/disappears immediately on orientation change
-                if (window.matchMedia("(orientation: portrait)").matches) {
-                    container.style.display = 'none';
-                } else {
+            // Handle orientation changes
+            function handleOrientation() {
+                if (window.matchMedia("(orientation: landscape)").matches) {
                     container.style.display = 'flex';
+                } else {
+                    container.style.display = 'none';
                 }
-            });
+            }
+
+            window.addEventListener('resize', handleOrientation);
+            window.addEventListener('orientationchange', handleOrientation);
+            handleOrientation();
 
         } else {
-            // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-            canvas.style.width = "800px";
+            // Desktop style: fixed 960x600 centered
+            canvas.style.width = "960px";
             canvas.style.height = "600px";
+            container.style.position = "relative";
+            container.style.margin = "0 auto";
         }
 
         loadingBar.style.display = "block";
@@ -242,9 +298,13 @@
                 progressBarFull.style.width = 100 * progress + "%";
             }).then((unityInstance) => {
                 loadingBar.style.display = "none";
-                fullscreenButton.onclick = () => {
-                    unityInstance.SetFullscreen(1);
-                };
+
+                // Custom fullscreen button handler
+                if (fullscreenButton) {
+                    fullscreenButton.onclick = () => {
+                        unityInstance.SetFullscreen(1);
+                    };
+                }
             }).catch((message) => {
                 alert(message);
             });
