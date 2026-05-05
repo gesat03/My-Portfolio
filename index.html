@@ -240,7 +240,7 @@
         }
 
         /* Portrait: show warning, hide Unity and prompt */
-        @media (orientation: portrait) {
+        /*@media (orientation: portrait) {
             #unity-container {
                 display: none !important;
             }
@@ -252,7 +252,7 @@
             .landscape-fullscreen-prompt {
                 display: none !important;
             }
-        }
+        }*/
 
         /* Landscape: show Unity, but check fullscreen status via JS */
         @media (orientation: landscape) {
@@ -266,7 +266,7 @@
         }
 
         /* Small screens: scale canvas to fit */
-        @media (orientation: landscape) and (max-width: 1400px) {
+        @media (orientation: landscape) and (max-width: 1366px) {
             #unity-canvas {
                 width: 100% !important;
                 height: auto !important;
@@ -284,7 +284,7 @@
 </head>
 <body>
     <!-- Portrait Warning Overlay -->
-    <div class="rotate-warning">
+    <!--<div class="rotate-warning">
         <div class="rotate-icon">📱 ↔️</div>
         <h2>Please Rotate Your Phone to Landscape</h2>
         <p>This portfolio is best viewed in landscape mode</p>
@@ -292,7 +292,7 @@
             💡 If your screen rotation is locked, swipe down from the top of your screen<br>
             and enable "Auto-rotate" or "Rotation Unlock" from your quick settings
         </p>
-    </div>
+    </div>-->
 
     <!-- Landscape Fullscreen Prompt (shown when in landscape but not fullscreen) -->
     <div class="landscape-fullscreen-prompt" id="fullscreenPrompt">
