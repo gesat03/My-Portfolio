@@ -62,9 +62,11 @@
         }
 
         .rotate-warning .small-note {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-top: 1.5rem;
-            opacity: 0.7;
+            opacity: 0.8;
+            max-width: 80%;
+            line-height: 1.4;
         }
 
         /* Portrait mode: hide Unity content, show warning */
@@ -89,7 +91,7 @@
             }
         }
 
-        /* Extra small landscape devices (like very short phones) */
+        /* Extra small landscape devices */
         @media (orientation: landscape) and (max-height: 400px) {
             .unity-mobile {
                 transform: scale(0.9);
@@ -101,14 +103,17 @@
     <!-- Landscape Warning Overlay -->
     <div class="rotate-warning">
         <div class="rotate-icon">📱 ↔️</div>
-        <h2>Lütfen Telefonunuzu Yatay Çevirin</h2>
-        <p>Bu portföy en iyi yatay (landscape) modda görüntülenir</p>
-        <p class="small-note">En iyi deneyim için telefonunuzu yan çevirin ⭢</p>
+        <h2>Please Rotate Your Phone to Landscape</h2>
+        <p>This portfolio is best viewed in landscape mode</p>
+        <p class="small-note">
+            💡 If your screen rotation is locked, swipe down from the top of your screen<br>
+            and enable "Auto-rotate" or "Rotation Unlock" from your quick settings
+        </p>
     </div>
 
     <!-- Unity Container -->
     <div id="unity-container" class="unity-desktop">
-        <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
+        <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
         <div id="unity-loading-bar">
             <div id="unity-logo"></div>
             <div id="unity-progress-bar-empty">
@@ -156,11 +161,11 @@
         }
 
         var buildUrl = "Build";
-        var loaderUrl = buildUrl + "/v9.loader.js";
+        var loaderUrl = buildUrl + "/v9.1.loader.js";
         var config = {
-            dataUrl: buildUrl + "/v9.data",
-            frameworkUrl: buildUrl + "/v9.framework.js",
-            codeUrl: buildUrl + "/v9.wasm",
+            dataUrl: buildUrl + "/v9.1.data",
+            frameworkUrl: buildUrl + "/v9.1.framework.js",
+            codeUrl: buildUrl + "/v9.1.wasm",
             streamingAssetsUrl: "StreamingAssets",
             companyName: "DefaultCompany",
             productName: "My Portfolio",
@@ -189,7 +194,7 @@
             // performance, uncomment the following line:
             // config.devicePixelRatio = 1;
 
-            // Add a resize listener to handle orientation changes gracefully
+            // Add resize listener to handle orientation changes gracefully
             window.addEventListener('resize', function () {
                 // This ensures the warning appears/disappears immediately on orientation change
                 if (window.matchMedia("(orientation: portrait)").matches) {
@@ -201,8 +206,8 @@
 
         } else {
             // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-            canvas.style.width = "1920px";
-            canvas.style.height = "1080px";
+            canvas.style.width = "960px";
+            canvas.style.height = "600px";
         }
 
         loadingBar.style.display = "block";
