@@ -8,28 +8,31 @@
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        /* White background - allow scrolling */
+        /* White background */
         body, html {
             margin: 0;
             padding: 0;
-            background-color: #ffffff !important;
+            background-color: #000000 !important;
             width: 100%;
-            min-height: 100%;
-            overflow-x: hidden;
-            overflow-y: auto; /* Allow scrolling */
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
         }
 
-        /* Unity container - centered on desktop */
+        /* Unity container */
         #unity-container {
-            background-color: #ffffff;
+            background-color: #000000;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            min-height: 100vh;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
 
-        /* Unity container wrapper for proper centering */
+        /* Unity wrapper */
         .unity-wrapper {
             display: flex;
             flex-direction: column;
@@ -39,14 +42,13 @@
 
         /* Fixed 1366x768 canvas */
         #unity-canvas {
-            background-color: #ffffff;
+            background-color: #000000;
             width: 1366px !important;
             height: 768px !important;
             display: block;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
-        /* Footer with logo and title - visible on all devices */
+        /* Footer */
         #unity-footer {
             display: flex;
             align-items: center;
@@ -54,9 +56,10 @@
             width: 1366px;
             margin-top: 10px;
             padding: 8px 12px;
-            background: #f5f5f5;
+            background: rgba(0,0,0,0.7);
             border-radius: 8px;
             box-sizing: border-box;
+            backdrop-filter: blur(8px);
         }
 
         #unity-webgl-logo {
@@ -66,20 +69,21 @@
             background-image: url('TemplateData/webgl-logo.png');
             background-size: contain;
             background-repeat: no-repeat;
+            filter: brightness(0) invert(1);
         }
 
         #unity-build-title {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 16px;
             font-weight: 500;
-            color: #333;
+            color: #fff;
         }
 
         #unity-fullscreen-button {
             cursor: pointer;
             width: 36px;
             height: 36px;
-            background: #e0e0e0;
+            background: rgba(255,255,255,0.2);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -87,16 +91,17 @@
             font-size: 20px;
             font-weight: bold;
             transition: all 0.2s ease;
-            color: #333;
+            color: white;
             margin-left: auto;
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
             #unity-fullscreen-button:hover {
-                background: #d0d0d0;
+                background: rgba(255,255,255,0.3);
                 transform: scale(1.05);
             }
 
-        /* Loading bar styles */
+        /* Loading bar */
         #unity-loading-bar {
             position: absolute;
             top: 50%;
@@ -105,7 +110,7 @@
             text-align: center;
         }
 
-        /* Landscape warning styles */
+        /* Landscape warning */
         .rotate-warning {
             display: none;
             position: fixed;
@@ -166,7 +171,7 @@
             line-height: 1.4;
         }
 
-        /* Portrait mode: hide Unity content, show warning */
+        /* Portrait: show warning, hide Unity */
         @media (orientation: portrait) {
             #unity-container {
                 display: none !important;
@@ -177,7 +182,7 @@
             }
         }
 
-        /* Landscape mode: show everything */
+        /* Landscape: show Unity */
         @media (orientation: landscape) {
             #unity-container {
                 display: flex !important;
@@ -188,7 +193,7 @@
             }
         }
 
-        /* Mobile landscape: scale 1366x768 to fit smaller screens */
+        /* Small screens: scale canvas to fit */
         @media (orientation: landscape) and (max-width: 1400px) {
             #unity-canvas {
                 width: 100% !important;
@@ -201,22 +206,6 @@
             #unity-footer {
                 width: 100%;
                 max-width: 1366px;
-            }
-        }
-
-        /* Desktop: normal centering */
-        @media (min-width: 1400px) {
-            #unity-container {
-                min-height: 100vh;
-            }
-
-            #unity-canvas {
-                width: 1366px !important;
-                height: 768px !important;
-            }
-
-            #unity-footer {
-                width: 1366px;
             }
         }
     </style>
@@ -260,6 +249,9 @@
         var fullscreenButton = document.querySelector("#unity-fullscreen-button");
         var warningBanner = document.querySelector("#unity-warning");
 
+        var isAutoFullscreen = false;
+        var unityInstance = null;
+
         function unityShowBanner(msg, type) {
             function updateBannerVisibility() {
                 warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
@@ -278,6 +270,61 @@
             updateBannerVisibility();
         }
 
+        // Auto fullscreen function for mobile landscape
+        function autoFullscreenOnLandscape() {
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                var isLandscape = window.matchMedia("(orientation: landscape)").matches;
+
+                if (isLandscape && !isAutoFullscreen && unityInstance) {
+                    // Auto enter fullscreen when landscape
+                    setTimeout(function () {
+                        if (canvas.requestFullscreen) {
+                            canvas.requestFullscreen().then(() => {
+                                isAutoFullscreen = true;
+                            }).catch(function (err) {
+                                console.log("Auto fullscreen blocked:", err);
+                            });
+                        } else if (canvas.webkitRequestFullscreen) {
+                            canvas.webkitRequestFullscreen();
+                            isAutoFullscreen = true;
+                        }
+                    }, 500);
+                }
+                else if (!isLandscape && isAutoFullscreen) {
+                    // Exit fullscreen when portrait
+                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        }
+                        isAutoFullscreen = false;
+                    }
+                }
+            }
+        }
+
+        // Listen to orientation change
+        window.addEventListener('orientationchange', function () {
+            setTimeout(autoFullscreenOnLandscape, 100);
+        });
+
+        window.addEventListener('resize', function () {
+            autoFullscreenOnLandscape();
+        });
+
+        // Listen to fullscreen change events to track state
+        document.addEventListener('fullscreenchange', function () {
+            if (!document.fullscreenElement) {
+                isAutoFullscreen = false;
+            }
+        });
+        document.addEventListener('webkitfullscreenchange', function () {
+            if (!document.webkitFullscreenElement) {
+                isAutoFullscreen = false;
+            }
+        });
+
         var buildUrl = "Build";
         var loaderUrl = buildUrl + "/v9.1.loader.js";
         var config = {
@@ -292,7 +339,7 @@
         };
 
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            // Mobile device - viewport settings
+            // Mobile device
             var meta = document.createElement('meta');
             meta.name = 'viewport';
             meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=yes, shrink-to-fit=yes';
@@ -300,32 +347,13 @@
             container.className = "unity-mobile";
             canvas.className = "unity-mobile";
 
-            // Don't lock scrolling on mobile
-            document.body.style.overflow = "auto";
-
-            // Fullscreen button handler
-            if (fullscreenButton) {
-                fullscreenButton.onclick = function () {
-                    if (canvas.requestFullscreen) {
-                        canvas.requestFullscreen();
-                    } else if (canvas.webkitRequestFullscreen) {
-                        canvas.webkitRequestFullscreen();
-                    }
-                };
-            }
+            // Prevent body scroll on mobile
+            document.body.style.overflow = "hidden";
 
         } else {
             // Desktop style
             canvas.style.width = "1366px";
             canvas.style.height = "768px";
-
-            if (fullscreenButton) {
-                fullscreenButton.onclick = function () {
-                    if (canvas.requestFullscreen) {
-                        canvas.requestFullscreen();
-                    }
-                };
-            }
         }
 
         loadingBar.style.display = "block";
@@ -335,15 +363,19 @@
         script.onload = () => {
             createUnityInstance(canvas, config, (progress) => {
                 progressBarFull.style.width = 100 * progress + "%";
-            }).then((unityInstance) => {
+            }).then((instance) => {
+                unityInstance = instance;
                 loadingBar.style.display = "none";
 
-                // Override fullscreen button to use Unity's method
+                // Fullscreen button handler
                 if (fullscreenButton) {
                     fullscreenButton.onclick = () => {
                         unityInstance.SetFullscreen(1);
                     };
                 }
+
+                // Trigger auto fullscreen after loading
+                setTimeout(autoFullscreenOnLandscape, 1000);
             }).catch((message) => {
                 alert(message);
             });
