@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="TemplateData/style.css">
 
     <style>
-        /* White background */
+        /* Black background */
         body, html {
             margin: 0;
             padding: 0;
@@ -40,11 +40,11 @@
             justify-content: center;
         }
 
-        /* Fixed 1366x768 canvas */
+        /* Fixed 1920x1080 canvas - NO STRETCH */
         #unity-canvas {
             background-color: #000000;
-            width: 1366px !important;
-            height: 768px !important;
+            width: 1920px !important;
+            height: 1080px !important;
             display: block;
         }
 
@@ -53,7 +53,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 1366px;
+            width: 1920px;
             margin-top: 10px;
             padding: 8px 12px;
             background: rgba(0,0,0,0.7);
@@ -110,8 +110,8 @@
             text-align: center;
         }
 
-        /* Landscape warning (for mobile portrait) */
-        .rotate-warning {
+        /* Fullscreen prompt - shown on mobile only */
+        .mobile-fullscreen-prompt {
             display: none;
             position: fixed;
             top: 0;
@@ -124,27 +124,9 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            z-index: 10000;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-        }
-
-        /* Landscape fullscreen prompt (shown in landscape but not fullscreen) */
-        .landscape-fullscreen-prompt {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            color: white;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
             z-index: 10001;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            backdrop-filter: blur(10px);
+            cursor: pointer;
         }
 
         .fullscreen-prompt-icon {
@@ -165,13 +147,13 @@
             }
         }
 
-        .landscape-fullscreen-prompt h2 {
+        .mobile-fullscreen-prompt h2 {
             font-size: 1.8rem;
             margin: 0.5rem 0;
             font-weight: 600;
         }
 
-        .landscape-fullscreen-prompt p {
+        .mobile-fullscreen-prompt p {
             font-size: 1.1rem;
             margin: 0.5rem 0;
             opacity: 0.9;
@@ -181,134 +163,53 @@
             margin-top: 2rem;
             padding: 15px 40px;
             font-size: 1.3rem;
-            background: #667eea;
-            border: none;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
             color: white;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
             .fullscreen-trigger-btn:hover {
-                background: #764ba2;
+                background: rgba(255,255,255,0.3);
                 transform: scale(1.05);
             }
 
-        .rotate-icon {
-            font-size: 6rem;
-            margin-bottom: 1rem;
-            animation: rotatePhone 1.5s ease-in-out infinite;
-        }
-
-        @keyframes rotatePhone {
-            0% {
-                transform: rotate(0deg);
-                opacity: 1;
-            }
-
-            50% {
-                transform: rotate(90deg);
-                opacity: 0.7;
-            }
-
-            100% {
-                transform: rotate(90deg);
-                opacity: 1;
-            }
-        }
-
-        .rotate-warning h2 {
-            font-size: 1.8rem;
-            margin: 0.5rem 0;
-            font-weight: 600;
-        }
-
-        .rotate-warning p {
-            font-size: 1.1rem;
-            margin: 0.5rem 0;
-            opacity: 0.9;
-        }
-
-        .rotate-warning .small-note {
-            font-size: 0.85rem;
-            margin-top: 1.5rem;
-            opacity: 0.8;
-            max-width: 80%;
-            line-height: 1.4;
-        }
-
-        /* Portrait: show warning, hide Unity and prompt */
-        /*@media (orientation: portrait) {
-            #unity-container {
-                display: none !important;
-            }
-
-            .rotate-warning {
-                display: flex !important;
-            }
-
-            .landscape-fullscreen-prompt {
-                display: none !important;
-            }
-        }*/
-
-        /* Landscape: show Unity, but check fullscreen status via JS */
-        @media (orientation: landscape) {
-            #unity-container {
-                display: flex !important;
-            }
-
-            .rotate-warning {
-                display: none !important;
-            }
-        }
-
-        /* Small screens: scale canvas to fit */
-        @media (orientation: landscape) and (max-width: 1366px) {
+        /* Small screens: scale canvas to fit with scroll (NO STRETCH) */
+        @media (max-width: 1920px) {
             #unity-canvas {
                 width: 100% !important;
                 height: auto !important;
-                max-width: 1366px;
-                max-height: 768px;
+                max-width: 1920px;
+                max-height: 1080px;
                 object-fit: contain;
             }
 
             #unity-footer {
                 width: 100%;
-                max-width: 1366px;
+                max-width: 1920px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Portrait Warning Overlay -->
-    <!--<div class="rotate-warning">
-        <div class="rotate-icon">📱 ↔️</div>
-        <h2>Please Rotate Your Phone to Landscape</h2>
-        <p>This portfolio is best viewed in landscape mode</p>
-        <p class="small-note">
-            💡 If your screen rotation is locked, swipe down from the top of your screen<br>
-            and enable "Auto-rotate" or "Rotation Unlock" from your quick settings
-        </p>
-    </div>-->
-
-    <!-- Landscape Fullscreen Prompt (shown when in landscape but not fullscreen) -->
-    <div class="landscape-fullscreen-prompt" id="fullscreenPrompt">
+    <!-- Mobile Fullscreen Prompt (only on mobile devices) -->
+    <div class="mobile-fullscreen-prompt" id="fullscreenPrompt">
         <div class="fullscreen-prompt-icon">⛶</div>
         <h2>Tap for Fullscreen Experience</h2>
         <p>For the best viewing experience, please enter fullscreen mode</p>
         <button class="fullscreen-trigger-btn" id="fullscreenTriggerBtn">Enter Fullscreen ⛶</button>
-        <p style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.6;">
-            Or tap anywhere on the screen
+        <p style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.7;">
+            Tap anywhere on the screen
         </p>
     </div>
 
     <!-- Unity Container -->
     <div id="unity-container">
         <div class="unity-wrapper">
-            <canvas id="unity-canvas" width="1366" height="768" tabindex="-1"></canvas>
+            <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
             <div id="unity-loading-bar">
                 <div id="unity-logo"></div>
                 <div id="unity-progress-bar-empty">
@@ -335,7 +236,7 @@
         var fullscreenTriggerBtn = document.getElementById("fullscreenTriggerBtn");
 
         var unityInstance = null;
-        var isFullscreen = false;
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         function unityShowBanner(msg, type) {
             function updateBannerVisibility() {
@@ -376,16 +277,20 @@
             }
         }
 
-        // Check and update prompt visibility
+        // Check and update prompt visibility (mobile only)
         function updatePromptVisibility() {
-            var isLandscape = window.matchMedia("(orientation: landscape)").matches;
+            if (!isMobile) {
+                fullscreenPrompt.style.display = "none";
+                return;
+            }
+
             var isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
 
-            if (isLandscape && !isCurrentlyFullscreen) {
-                // Show prompt in landscape when not fullscreen
+            if (!isCurrentlyFullscreen) {
+                // Show prompt on mobile when not in fullscreen
                 fullscreenPrompt.style.display = "flex";
             } else {
-                // Hide prompt
+                // Hide prompt when in fullscreen
                 fullscreenPrompt.style.display = "none";
             }
         }
@@ -393,19 +298,8 @@
         // Listen to fullscreen change
         document.addEventListener('fullscreenchange', function () {
             updatePromptVisibility();
-            if (document.fullscreenElement && unityInstance) {
-                // In fullscreen, maybe adjust something
-            }
         });
         document.addEventListener('webkitfullscreenchange', function () {
-            updatePromptVisibility();
-        });
-
-        // Listen to orientation change
-        window.addEventListener('orientationchange', function () {
-            setTimeout(updatePromptVisibility, 100);
-        });
-        window.addEventListener('resize', function () {
             updatePromptVisibility();
         });
 
@@ -420,7 +314,10 @@
         // Tap anywhere on prompt to enter fullscreen
         if (fullscreenPrompt) {
             fullscreenPrompt.addEventListener('click', function (e) {
-                if (e.target === fullscreenPrompt || e.target.classList.contains('fullscreen-prompt-icon') || e.target.tagName === 'P' || e.target.tagName === 'H2') {
+                if (e.target === fullscreenPrompt ||
+                    e.target.classList.contains('fullscreen-prompt-icon') ||
+                    e.target.tagName === 'P' ||
+                    e.target.tagName === 'H2') {
                     enterFullscreen();
                 }
             });
@@ -450,7 +347,7 @@
             showBanner: unityShowBanner,
         };
 
-        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        if (isMobile) {
             // Mobile device
             var meta = document.createElement('meta');
             meta.name = 'viewport';
@@ -462,10 +359,18 @@
             // Prevent body scroll on mobile
             document.body.style.overflow = "hidden";
 
+            // Show prompt after load
+            setTimeout(updatePromptVisibility, 500);
+
         } else {
-            // Desktop style
-            canvas.style.width = "1366px";
-            canvas.style.height = "768px";
+            // Desktop style - no auto fullscreen
+            canvas.style.width = "1920px";
+            canvas.style.height = "1080px";
+
+            // Hide prompt on desktop
+            if (fullscreenPrompt) {
+                fullscreenPrompt.style.display = "none";
+            }
         }
 
         loadingBar.style.display = "block";
@@ -479,7 +384,7 @@
                 unityInstance = instance;
                 loadingBar.style.display = "none";
 
-                // Check prompt visibility after load
+                // Update prompt after load
                 setTimeout(updatePromptVisibility, 500);
             }).catch((message) => {
                 alert(message);
