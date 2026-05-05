@@ -110,7 +110,7 @@
             text-align: center;
         }
 
-        /* Landscape warning */
+        /* Landscape warning (for mobile portrait) */
         .rotate-warning {
             display: none;
             position: fixed;
@@ -127,6 +127,74 @@
             z-index: 10000;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
         }
+
+        /* Landscape fullscreen prompt (shown in landscape but not fullscreen) */
+        .landscape-fullscreen-prompt {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            color: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 10001;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-prompt-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        .landscape-fullscreen-prompt h2 {
+            font-size: 1.8rem;
+            margin: 0.5rem 0;
+            font-weight: 600;
+        }
+
+        .landscape-fullscreen-prompt p {
+            font-size: 1.1rem;
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+
+        .fullscreen-trigger-btn {
+            margin-top: 2rem;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            background: #667eea;
+            border: none;
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+            .fullscreen-trigger-btn:hover {
+                background: #764ba2;
+                transform: scale(1.05);
+            }
 
         .rotate-icon {
             font-size: 6rem;
@@ -171,7 +239,7 @@
             line-height: 1.4;
         }
 
-        /* Portrait: show warning, hide Unity */
+        /* Portrait: show warning, hide Unity and prompt */
         @media (orientation: portrait) {
             #unity-container {
                 display: none !important;
@@ -180,9 +248,13 @@
             .rotate-warning {
                 display: flex !important;
             }
+
+            .landscape-fullscreen-prompt {
+                display: none !important;
+            }
         }
 
-        /* Landscape: show Unity */
+        /* Landscape: show Unity, but check fullscreen status via JS */
         @media (orientation: landscape) {
             #unity-container {
                 display: flex !important;
@@ -211,7 +283,7 @@
     </style>
 </head>
 <body>
-    <!-- Landscape Warning Overlay -->
+    <!-- Portrait Warning Overlay -->
     <div class="rotate-warning">
         <div class="rotate-icon">📱 ↔️</div>
         <h2>Please Rotate Your Phone to Landscape</h2>
@@ -219,6 +291,17 @@
         <p class="small-note">
             💡 If your screen rotation is locked, swipe down from the top of your screen<br>
             and enable "Auto-rotate" or "Rotation Unlock" from your quick settings
+        </p>
+    </div>
+
+    <!-- Landscape Fullscreen Prompt (shown when in landscape but not fullscreen) -->
+    <div class="landscape-fullscreen-prompt" id="fullscreenPrompt">
+        <div class="fullscreen-prompt-icon">⛶</div>
+        <h2>Tap for Fullscreen Experience</h2>
+        <p>For the best viewing experience, please enter fullscreen mode</p>
+        <button class="fullscreen-trigger-btn" id="fullscreenTriggerBtn">Enter Fullscreen ⛶</button>
+        <p style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.6;">
+            Or tap anywhere on the screen
         </p>
     </div>
 
@@ -248,9 +331,11 @@
         var progressBarFull = document.querySelector("#unity-progress-bar-full");
         var fullscreenButton = document.querySelector("#unity-fullscreen-button");
         var warningBanner = document.querySelector("#unity-warning");
+        var fullscreenPrompt = document.getElementById("fullscreenPrompt");
+        var fullscreenTriggerBtn = document.getElementById("fullscreenTriggerBtn");
 
-        var isAutoFullscreen = false;
         var unityInstance = null;
+        var isFullscreen = false;
 
         function unityShowBanner(msg, type) {
             function updateBannerVisibility() {
@@ -270,60 +355,87 @@
             updateBannerVisibility();
         }
 
-        // Auto fullscreen function for mobile landscape
-        function autoFullscreenOnLandscape() {
-            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                var isLandscape = window.matchMedia("(orientation: landscape)").matches;
-
-                if (isLandscape && !isAutoFullscreen && unityInstance) {
-                    // Auto enter fullscreen when landscape
-                    setTimeout(function () {
-                        if (canvas.requestFullscreen) {
-                            canvas.requestFullscreen().then(() => {
-                                isAutoFullscreen = true;
-                            }).catch(function (err) {
-                                console.log("Auto fullscreen blocked:", err);
-                            });
-                        } else if (canvas.webkitRequestFullscreen) {
-                            canvas.webkitRequestFullscreen();
-                            isAutoFullscreen = true;
-                        }
-                    }, 500);
-                }
-                else if (!isLandscape && isAutoFullscreen) {
-                    // Exit fullscreen when portrait
-                    if (document.fullscreenElement || document.webkitFullscreenElement) {
-                        if (document.exitFullscreen) {
-                            document.exitFullscreen();
-                        } else if (document.webkitExitFullscreen) {
-                            document.webkitExitFullscreen();
-                        }
-                        isAutoFullscreen = false;
-                    }
-                }
+        // Function to enter fullscreen
+        function enterFullscreen() {
+            var elem = canvas;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
             }
         }
 
-        // Listen to orientation change
-        window.addEventListener('orientationchange', function () {
-            setTimeout(autoFullscreenOnLandscape, 100);
-        });
+        // Function to exit fullscreen
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
 
-        window.addEventListener('resize', function () {
-            autoFullscreenOnLandscape();
-        });
+        // Check and update prompt visibility
+        function updatePromptVisibility() {
+            var isLandscape = window.matchMedia("(orientation: landscape)").matches;
+            var isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
 
-        // Listen to fullscreen change events to track state
+            if (isLandscape && !isCurrentlyFullscreen) {
+                // Show prompt in landscape when not fullscreen
+                fullscreenPrompt.style.display = "flex";
+            } else {
+                // Hide prompt
+                fullscreenPrompt.style.display = "none";
+            }
+        }
+
+        // Listen to fullscreen change
         document.addEventListener('fullscreenchange', function () {
-            if (!document.fullscreenElement) {
-                isAutoFullscreen = false;
+            updatePromptVisibility();
+            if (document.fullscreenElement && unityInstance) {
+                // In fullscreen, maybe adjust something
             }
         });
         document.addEventListener('webkitfullscreenchange', function () {
-            if (!document.webkitFullscreenElement) {
-                isAutoFullscreen = false;
-            }
+            updatePromptVisibility();
         });
+
+        // Listen to orientation change
+        window.addEventListener('orientationchange', function () {
+            setTimeout(updatePromptVisibility, 100);
+        });
+        window.addEventListener('resize', function () {
+            updatePromptVisibility();
+        });
+
+        // Fullscreen button on prompt
+        if (fullscreenTriggerBtn) {
+            fullscreenTriggerBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                enterFullscreen();
+            });
+        }
+
+        // Tap anywhere on prompt to enter fullscreen
+        if (fullscreenPrompt) {
+            fullscreenPrompt.addEventListener('click', function (e) {
+                if (e.target === fullscreenPrompt || e.target.classList.contains('fullscreen-prompt-icon') || e.target.tagName === 'P' || e.target.tagName === 'H2') {
+                    enterFullscreen();
+                }
+            });
+        }
+
+        // Regular fullscreen button
+        if (fullscreenButton) {
+            fullscreenButton.onclick = function () {
+                if (unityInstance) {
+                    unityInstance.SetFullscreen(1);
+                } else {
+                    enterFullscreen();
+                }
+            };
+        }
 
         var buildUrl = "Build";
         var loaderUrl = buildUrl + "/v9.1.loader.js";
@@ -367,21 +479,17 @@
                 unityInstance = instance;
                 loadingBar.style.display = "none";
 
-                // Fullscreen button handler
-                if (fullscreenButton) {
-                    fullscreenButton.onclick = () => {
-                        unityInstance.SetFullscreen(1);
-                    };
-                }
-
-                // Trigger auto fullscreen after loading
-                setTimeout(autoFullscreenOnLandscape, 1000);
+                // Check prompt visibility after load
+                setTimeout(updatePromptVisibility, 500);
             }).catch((message) => {
                 alert(message);
             });
         };
 
         document.body.appendChild(script);
+
+        // Initial check
+        setTimeout(updatePromptVisibility, 100);
     </script>
 </body>
 </html>
